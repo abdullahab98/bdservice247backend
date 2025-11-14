@@ -1,12 +1,12 @@
-
+// Success Response Handler
 const handleSuccess = (res, data, message = "", code = 200) => {
 
-  const responseData = Array.isArray(data) ? data : (data ? [data] : []);
+  const responseData = data; 
 
   res.status(code).json({
     code: String(code),
-    data: responseData,
-    description: "",
+    data: responseData, 
+    description: "", 
     execution: true,
     message: message || "",
     status: "success",
@@ -14,14 +14,14 @@ const handleSuccess = (res, data, message = "", code = 200) => {
   });
 };
 
-
+// Error Response Handler
 const handleError = (res, error, message = "An error occurred", code = 500) => {
-
+  // 'error' object theke details ber kora
   const errorDetails = error instanceof Error ? error.message : (typeof error === 'string' ? error : "Internal server error");
 
   res.status(code).json({
     code: String(code),
-    data: [], 
+    data: [], // Error-er shomoy data empty array (Standard)
     description: errorDetails,
     execution: false,
     message: message,
@@ -30,6 +30,7 @@ const handleError = (res, error, message = "An error occurred", code = 500) => {
   });
 };
 
+// Main middleware function
 export const responseHandler = (req, res, next) => {
   res.apiSuccess = (data, message, code) => handleSuccess(res, data, message, code);
   res.apiError = (error, message, code) => handleError(res, error, message, code);
