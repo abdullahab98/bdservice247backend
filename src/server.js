@@ -23,6 +23,24 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+// Health Check Endpoint
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// POST health endpoint (alternative)
+app.post("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
