@@ -55,3 +55,29 @@ export const login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+export const checkTokenStatus = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(200).json({ valid: false, message: "No token provided" });
+    }
+    const blacklisted = await TokenBlacklist.findOne({ token });
+    if (blacklisted) {
+      return res.status(200).json({ valid: false, message: "Token has been logged out" });
+    }
+
+    // 2. JWT verification check
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+    
+        return res.status(200).json({ valid: false, message: "Token is invalid or expired" });
+      }
+     
+      res.status(200).json({ valid: true, message: "Token is valid" });
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
