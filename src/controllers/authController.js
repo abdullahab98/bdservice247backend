@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import dotenv from "dotenv";
-import TokenBlacklist from "../models/TokenBlacklist.js";
+import TokenBlacklist from "../models/TokenBlacklist.js"; // <-- Import kora ache
 
 dotenv.config();
 
@@ -23,9 +23,9 @@ export const register = async (req, res) => {
 
     await user.save();
 
-    res.json({ message: "Registration successful! Wait for admin approval." });
+    res.apiSuccess(null, "Registration successful! Wait for admin approval.", 201);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Registration failed", 500);
   }
 };
 
@@ -34,13 +34,18 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.apiError("User not found", "User not found", 404);
+    }
 
-    if (user.status !== "success")
-      return res.status(403).json({ error: "Account pending admin approval" });
+    if (user.status !== "success") {
+      return res.apiError("Account pending admin approval", "Account pending admin approval", 403);
+    }
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ error: "Invalid password" });
+    if (!match) {
+      return res.apiError("Invalid password", "Invalid password", 400);
+    }
 
     const token = jwt.sign(
       { id: user._id },
@@ -48,37 +53,37 @@ export const login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({
-      message: "Login successful",
-      token,
-    });
+    res.apiSuccess({ token }, "Login successful");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Login failed", 500);
   }
 };
+
+// 'checkTokenStatus' updated with new handler
 export const checkTokenStatus = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res.status(200).json({ valid: false, message: "No token provided" });
+      return res.apiSuccess({ valid: false }, "No token provided");
     }
+
+    // 1. Blacklist check
     const blacklisted = await TokenBlacklist.findOne({ token });
     if (blacklisted) {
-      return res.status(200).json({ valid: false, message: "Token has been logged out" });
+      return res.apiSuccess({ valid: false }, "Token has been logged out");
     }
 
     // 2. JWT verification check
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
-    
-        return res.status(200).json({ valid: false, message: "Token is invalid or expired" });
+        return res.apiSuccess({ valid: false }, "Token is invalid or expired");
       }
-     
-      res.status(200).json({ valid: true, message: "Token is valid" });
+      
+      res.apiSuccess({ valid: true }, "Token is valid");
     });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Token status check failed", 500);
   }
 };

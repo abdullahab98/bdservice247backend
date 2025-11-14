@@ -21,18 +21,19 @@ export const adminRegister = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({
-      message: "Admin created successfully",
+    const data = {
       admin: {
         id: admin._id,
         name: admin.name,
         email: admin.email
       },
       token: token
-    });
+    };
+
+    res.apiSuccess(data, "Admin created successfully", 201);
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Admin registration failed", 500);
   }
 };
 
@@ -41,10 +42,14 @@ export const adminLogin = async (req, res) => {
     const { email, password } = req.body;
 
     const admin = await Admin.findOne({ email });
-    if (!admin) return res.status(404).json({ error: "Admin not found" });
+    if (!admin) {
+      return res.apiError("Admin not found", "Admin not found", 404);
+    }
 
     const match = await bcrypt.compare(password, admin.password);
-    if (!match) return res.status(400).json({ error: "Invalid password" });
+    if (!match) {
+      return res.apiError("Invalid password", "Invalid password", 400);
+    }
 
     const token = jwt.sign(
       { id: admin._id, role: "admin" },
@@ -52,9 +57,9 @@ export const adminLogin = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({ message: "Admin login successful", token });
+    res.apiSuccess({ token }, "Admin login successful");
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Admin login failed", 500);
   }
 };

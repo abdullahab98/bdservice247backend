@@ -16,10 +16,14 @@ export const createUser = async (req, res) => {
       password: hashedPass,
       transaction_id,
     });
+    
+    // Password bad diye pathano
+    const userResult = user.toObject();
+    delete userResult.password;
 
-    res.json({ message: "User created", user });
+    res.apiSuccess(userResult, "User created", 201);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to create user", 500);
   }
 };
 
@@ -27,9 +31,9 @@ export const createUser = async (req, res) => {
 export const getUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
-    res.json(users);
+    res.apiSuccess(users, "Users retrieved");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get users", 500);
   }
 };
 
@@ -37,11 +41,13 @@ export const getUsers = async (req, res) => {
 export const getUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.apiError("User not found", "User not found", 404);
+    }
 
-    res.json(user);
+    res.apiSuccess(user, "User retrieved");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get user", 500);
   }
 };
 
@@ -50,13 +56,16 @@ export const updateUser = async (req, res) => {
   try {
     const updateData = req.body;
 
+    // Jate password update na hoy
+    delete updateData.password;
+
     const user = await User.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
     }).select("-password");
 
-    res.json({ message: "User updated", user });
+    res.apiSuccess(user, "User updated");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to update user", 500);
   }
 };
 
@@ -64,18 +73,22 @@ export const updateUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
-    res.json({ message: "User deleted" });
+    res.apiSuccess(null, "User deleted");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to delete user", 500);
   }
 };
+
+// GET USER PROFILE (Logged in user)
 export const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.apiError("User not found", "User not found", 404);
+    }
 
-    res.json(user);
+    res.apiSuccess(user, "Profile retrieved");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get profile", 500);
   }
 };

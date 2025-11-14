@@ -4,9 +4,9 @@ import Recharge from "../models/Recharge.js";
 export const createRecharge = async (req, res) => {
   try {
     const recharge = await Recharge.create(req.body);
-    res.json({ message: "Recharge created", recharge });
+    res.apiSuccess(recharge, "Recharge created", 201);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to create recharge", 500);
   }
 };
 
@@ -14,9 +14,9 @@ export const createRecharge = async (req, res) => {
 export const getRecharges = async (req, res) => {
   try {
     const list = await Recharge.find();
-    res.json(list);
+    res.apiSuccess(list, "Recharges retrieved");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get recharges", 500);
   }
 };
 
@@ -24,11 +24,13 @@ export const getRecharges = async (req, res) => {
 export const getRecharge = async (req, res) => {
   try {
     const recharge = await Recharge.findById(req.params.id);
-    if (!recharge) return res.status(404).json({ error: "Recharge not found" });
+    if (!recharge) {
+      return res.apiError("Recharge not found", "Recharge not found", 404);
+    }
 
-    res.json(recharge);
+    res.apiSuccess(recharge, "Recharge retrieved");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get recharge", 500);
   }
 };
 
@@ -41,9 +43,9 @@ export const updateRecharge = async (req, res) => {
       { new: true }
     );
 
-    res.json({ message: "Recharge updated", recharge });
+    res.apiSuccess(recharge, "Recharge updated");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to update recharge", 500);
   }
 };
 
@@ -51,8 +53,8 @@ export const updateRecharge = async (req, res) => {
 export const deleteRecharge = async (req, res) => {
   try {
     await Recharge.findByIdAndDelete(req.params.id);
-    res.json({ message: "Recharge deleted" });
+    res.apiSuccess(null, "Recharge deleted");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to delete recharge", 500);
   }
 };

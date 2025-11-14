@@ -1,7 +1,6 @@
 import Recharge from "../models/Recharge.js";
 import User from "../models/User.js";
 
-
 // Approve Recharge
 export const approveRecharge = async (req, res) => {
   try {
@@ -9,7 +8,7 @@ export const approveRecharge = async (req, res) => {
 
     const recharge = await Recharge.findById(id);
     if (!recharge) {
-      return res.status(404).json({ error: "Recharge not found" });
+      return res.apiError("Recharge not found", "Recharge not found", 404);
     }
 
     // Update status
@@ -21,9 +20,9 @@ export const approveRecharge = async (req, res) => {
       $inc: { balance: recharge.amount },
     });
 
-    res.json({ message: "Recharge approved and balance updated!" });
+    res.apiSuccess(null, "Recharge approved and balance updated!");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to approve recharge", 500);
   }
 };
 
@@ -34,13 +33,15 @@ export const approveUser = async (req, res) => {
     const { id } = req.params;
 
     const user = await User.findById(id);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.apiError("User not found", "User not found", 404);
+    }
 
     user.status = "success";
     await user.save();
 
-    res.json({ message: "User approved successfully!" });
+    res.apiSuccess(null, "User approved successfully!");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to approve user", 500);
   }
 };

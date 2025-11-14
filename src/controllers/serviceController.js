@@ -4,9 +4,9 @@ import Service from "../models/Service.js";
 export const createService = async (req, res) => {
   try {
     const service = await Service.create(req.body);
-    res.json({ message: "Service created", service });
+    res.apiSuccess(service, "Service created", 201);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to create service", 500);
   }
 };
 
@@ -14,9 +14,9 @@ export const createService = async (req, res) => {
 export const getServices = async (req, res) => {
   try {
     const services = await Service.find();
-    res.json(services);
+    res.apiSuccess(services, "Services retrieved");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get services", 500);
   }
 };
 
@@ -24,10 +24,12 @@ export const getServices = async (req, res) => {
 export const getService = async (req, res) => {
   try {
     const service = await Service.findById(req.params.id);
-    if (!service) return res.status(404).json({ error: "Service not found" });
-    res.json(service);
+    if (!service) {
+      return res.apiError("Service not found", "Service not found", 404);
+    }
+    res.apiSuccess(service, "Service retrieved");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get service", 500);
   }
 };
 
@@ -40,9 +42,9 @@ export const updateService = async (req, res) => {
       { new: true }
     );
 
-    res.json({ message: "Service updated", service });
+    res.apiSuccess(service, "Service updated");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to update service", 500);
   }
 };
 
@@ -50,8 +52,8 @@ export const updateService = async (req, res) => {
 export const deleteService = async (req, res) => {
   try {
     await Service.findByIdAndDelete(req.params.id);
-    res.json({ message: "Service deleted" });
+    res.apiSuccess(null, "Service deleted");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to delete service", 500);
   }
 };

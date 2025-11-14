@@ -8,9 +8,9 @@ export const getAllOrders = async (req, res) => {
       .populate("user_id", "name email")
       .populate("service_id");
 
-    res.json(orders);
+    res.apiSuccess(orders, "All orders retrieved");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get orders", 500);
   }
 };
 
@@ -20,17 +20,19 @@ export const updateOrderStatus = async (req, res) => {
     const { status, adminComment } = req.body;
 
     const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (!order) {
+      return res.apiError("Order not found", "Order not found", 404);
+    }
 
     order.status = status;
     if (adminComment) order.adminComment = adminComment;
 
     await order.save();
 
-    res.json({ message: "Order updated", order });
+    res.apiSuccess(order, "Order updated");
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to update order", 500);
   }
 };
 
@@ -39,10 +41,13 @@ export const adminCancelOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
-    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (!order) {
+      return res.apiError("Order not found", "Order not found", 404);
+    }
 
-    if (order.status === "cancelled")
-      return res.json({ message: "Order already cancelled" });
+    if (order.status === "cancelled") {
+      return res.apiSuccess(order, "Order already cancelled");
+    }
 
     // Refund to user
     const user = await User.findById(order.user_id);
@@ -52,10 +57,10 @@ export const adminCancelOrder = async (req, res) => {
     order.status = "cancelled";
     await order.save();
 
-    res.json({ message: "Order cancelled by admin & refunded", order });
+    res.apiSuccess(order, "Order cancelled by admin & refunded");
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to cancel order", 500);
   }
 };
 
@@ -63,8 +68,8 @@ export const adminCancelOrder = async (req, res) => {
 export const deleteOrder = async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id);
-    res.json({ message: "Order deleted by admin" });
+    res.apiSuccess(null, "Order deleted by admin");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to delete order", 500);
   }
 };

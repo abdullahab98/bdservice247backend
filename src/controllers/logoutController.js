@@ -4,8 +4,9 @@ export const logout = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
-    if (!token)
-      return res.status(400).json({ error: "No token provided" });
+    if (!token) {
+      return res.apiError("No token provided", "No token provided", 400);
+    }
 
     // Token blacklist
     await TokenBlacklist.create({
@@ -13,9 +14,9 @@ export const logout = async (req, res) => {
       expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // token expiry
     });
 
-    res.json({ message: "Logged out successfully" });
+    res.apiSuccess(null, "Logged out successfully");
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Logout failed", 500);
   }
 };

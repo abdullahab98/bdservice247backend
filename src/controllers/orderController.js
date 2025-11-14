@@ -9,11 +9,14 @@ export const createOrder = async (req, res) => {
     const userId = req.user.id;
 
     const service = await Service.findById(service_id);
-    if (!service) return res.status(404).json({ error: "Service not found" });
+    if (!service) {
+      return res.apiError("Service not found", "Service not found", 404);
+    }
 
     const user = await User.findById(userId);
-    if (user.balance < service.price)
-      return res.status(400).json({ error: "Not enough balance" });
+    if (user.balance < service.price) {
+      return res.apiError("Not enough balance", "Not enough balance", 400);
+    }
 
     // Deduct balance
     user.balance -= service.price;
@@ -26,10 +29,10 @@ export const createOrder = async (req, res) => {
       price: service.price,
     });
 
-    res.json({ message: "Order placed", order });
+    res.apiSuccess(order, "Order placed", 201);
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to place order", 500);
   }
 };
 
@@ -37,9 +40,9 @@ export const createOrder = async (req, res) => {
 export const getUserOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user_id: req.user.id }).populate("service_id");
-    res.json(orders);
+    res.apiSuccess(orders, "User orders retrieved");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get user orders", 500);
   }
 };
 
@@ -51,10 +54,10 @@ export const getUserOrdersByService = async (req, res) => {
       service_id: req.params.serviceId,
     });
 
-    res.json(orders);
+    res.apiSuccess(orders, "User orders for service retrieved");
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to get user orders by service", 500);
   }
 };
 
@@ -66,10 +69,13 @@ export const cancelOrder = async (req, res) => {
       user_id: req.user.id,
     });
 
-    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (!order) {
+      return res.apiError("Order not found", "Order not found", 404);
+    }
 
-    if (order.status !== "pending")
-      return res.status(400).json({ error: "Only pending orders can be cancelled" });
+    if (order.status !== "pending") {
+      return res.apiError("Only pending orders can be cancelled", "Only pending orders can be cancelled", 400);
+    }
 
     // Refund
     const user = await User.findById(order.user_id);
@@ -79,9 +85,9 @@ export const cancelOrder = async (req, res) => {
     order.status = "cancelled";
     await order.save();
 
-    res.json({ message: "Order cancelled & amount refunded", order });
+    res.apiSuccess(order, "Order cancelled & amount refunded");
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.apiError(err, "Failed to cancel order", 500);
   }
 };
