@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import dotenv from "dotenv";
-import TokenBlacklist from "../models/TokenBlacklist.js"; // <-- Import kora ache
+import TokenBlacklist from "../models/TokenBlacklist.js";
 
 dotenv.config();
 
@@ -29,11 +29,13 @@ export const register = async (req, res) => {
   }
 };
 
+// --- LOGIN FUNCTION-E PORIBORTON EKHANE ---
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    // User-ke find korar shomoy-i password select kora hocche
+    const user = await User.findOne({ email }); // Password select kora holo authentication-er jonno
     if (!user) {
       return res.apiError("User not found", "User not found", 404);
     }
@@ -53,13 +55,29 @@ export const login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.apiSuccess({ token }, "Login successful");
+    // --- NOTUN CODE ---
+    // Response-e pathanor jonno user object theke password remove kora
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    // --- SHESH ---
+
+
+    // Response-e 'token' ebong 'user' object pathano hocche
+    res.apiSuccess(
+      { 
+        token, 
+        user: userResponse // User information add kora holo
+      }, 
+      "Login successful"
+    );
+
   } catch (err) {
     res.apiError(err, "Login failed", 500);
   }
 };
+// --- LOGIN FUNCTION PORIBORTON SHESH ---
 
-// 'checkTokenStatus' updated with new handler
+
 export const checkTokenStatus = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
