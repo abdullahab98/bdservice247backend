@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import dotenv from "dotenv";
+import TokenBlacklist from "../models/TokenBlacklist.js";
 
 dotenv.config();
 
